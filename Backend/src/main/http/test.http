@@ -1,0 +1,40 @@
+GET http://localhost:8079/whatsapp/request/reset
+
+###
+
+POST http://localhost:8079/whatsapp/request/register
+Content-Type: application/json
+
+{
+  "username": "user1",
+  "password": "geheim"
+}
+
+###
+
+POST http://localhost:8079/whatsapp/request/register
+Content-Type: application/json
+
+{
+  "username": "user2",
+  "password": "geheim"
+}
+
+
+###
+
+POST http://localhost:8079/whatsapp/request/login
+Content-Type: application/json
+
+{
+  "username": "user1",
+  "password": "geheim"
+}
+
+
+###
+
+GET http://localhost:8079/whatsapp/request/info
+Authorization: Bearer eyJraWQiOiJwcml2YXRlS2V5LnBlbSIsInR5cCI6IkpXVCIsImFsZyI6IlJTMjU2In0.eyJ1cG4iOiJ1c2VyMSIsImlzcyI6Imh0dHBzOi8vYXQuaHRsIiwiZ3JvdXBzIjpbInVzZXIiXSwiaWF0IjoxNjE2MjczMDI4LCJhdXRoX3RpbWUiOjE2MTYyNzMwMjgsImV4cCI6MTYxNjI3MzM4OCwianRpIjoiMTg3Yjk0NTUtOGQ4My00ZDFlLTlhOTItNjZkMjAzNWZmODZiIn0.jK792DhFOXnyTO9BZ-AsyTC5wWM1rp2vZxydMJ3EqIhpmZa9U3X60-UBB7lD6_epB9MskBBRquOgLPsdGxkkY-nvWQsFYL1EFfT09CSEFgL1s66SrDAUc1Q3OfTel1q__fJFWzofbi9SxcVDZy_3AeWWrYaoN4ZDoNihFR_yXSFM6MWjcNlzVUTojgGwrnaozIVOmBwemvlE2mwosCJ1FJQoPA0pG4LQxPU_OH5fGIgpq9takdQWXC7p7nsKbp44M6pwIthh5FbsVBKoGTJtce6tHUqetOHCwhdsf6km6umfjIjgGZRhkWX3P5rfhq9b4y_agednRRIlCeBILBPUzQ
+
+###
