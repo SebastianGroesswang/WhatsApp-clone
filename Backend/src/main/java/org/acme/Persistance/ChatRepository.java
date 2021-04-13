@@ -5,7 +5,9 @@ import org.acme.models.*;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.transaction.Transactional;
+import java.util.Collection;
 import java.util.List;
 
 @RequestScoped
@@ -66,11 +68,27 @@ public class ChatRepository {
     }
 
     public List<Room> getAllGroupsFromUser(AppUser user){
-        var result = em.createQuery("select r from Room r join fetch Membership m where m.id.user.id = " + user.getId() + ";", Room.class).getResultList();
-        return result;
+        try {
+            //var result = em.createQuery("select m from Membership m where m.id.user.id = " + user.getId(), Membership.class).getResultList();
+            var result = em.createQuery("select r from Room r join Membership m on r.roomId = m.id.room.roomId where m.id.user.id = " + user.getId(), Room.class).getResultList();
+            return result;
+        } catch (NoResultException e){
+            return null;
+        }
+    }
+
+    public Room getRoomByName(String groupName) {
+        try{
+            Room temp = em.createQuery("select a from Room a where a.roomName = '" + groupName + "'", Room.class).getSingleResult();
+            return temp;
+        } catch (NoResultException e){
+            return null;
+        }
     }
 
 
-
-
+    public List<Message> loadMessagesFromUser(AppUser user) {
+        var result = em.createQuery("select m from Message m ");//todo
+        return null;
+    }
 }

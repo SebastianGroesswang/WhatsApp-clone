@@ -1,6 +1,7 @@
 package org.acme.Persistance;
 
 import org.acme.models.AppUser;
+import org.acme.models.Room;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.RequestScoped;
@@ -32,8 +33,10 @@ public class UserRepository {
 
     public AppUser GetUserByName(String name){
         try{
-            AppUser temp = em.createQuery("select a from AppUser a where a.username = '" + name + "'", AppUser.class).getSingleResult();
-            return temp;
+            var temp = em.createQuery("select a from AppUser a where a.username = '" + name + "'", AppUser.class).getResultList();
+            if (temp.size() == 0)
+                return null;
+            return temp.get(0);
         } catch (NoResultException e){
             return null;
         }
@@ -43,5 +46,14 @@ public class UserRepository {
     public List<AppUser> getUsers() {
 
         return em.createQuery("select a from AppUser a", AppUser.class).getResultList();
+    }
+
+    public Room getRoomByName(String groupName) {
+        try{
+            Room temp = em.createQuery("select a from Room a where a.roomName = '" + groupName + "'", Room.class).getSingleResult();
+            return temp;
+        } catch (NoResultException e){
+            return null;
+        }
     }
 }

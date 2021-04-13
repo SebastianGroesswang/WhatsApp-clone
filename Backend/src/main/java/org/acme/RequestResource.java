@@ -1,8 +1,12 @@
 package org.acme;
 
 import org.acme.controller.UserLogic;
+import org.acme.dto.MembershipDto;
+import org.acme.dto.MessageDto;
 import org.acme.dto.UserDto;
+import org.acme.dto.UserOutDto;
 import org.acme.models.AppUser;
+import org.acme.models.Room;
 import org.acme.util.TokenUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.Claims;
@@ -85,6 +89,12 @@ public class RequestResource {
     }
 
     @GET
+    @Path("init")
+    public void init(){
+        logic.insertDummyData();
+    }
+
+    @GET
     @Path("info")
     @PermitAll
     public Response getInfo(@Context SecurityContext ctx) {
@@ -97,16 +107,63 @@ public class RequestResource {
 
     //todo create call for get all groups
 
+    @POST
+    @Path("createGroup")
+    @Consumes(MediaType.APPLICATION_JSON)
+    //@Produces(MediaType.APPLICATION_JSON)
+    public Response createGroup(String groupName){
+
+        System.out.println("test");
+
+        logic.createRoom(groupName);
+        return Response.ok().build();
+    }
+
+    @POST
+    @Path("createMembership")
+    @Consumes(MediaType.APPLICATION_JSON)
+    //@Produces(MediaType.APPLICATION_JSON)
+    public Response createMembership(MembershipDto dto){
+
+        //System.out.println("hey there");
+        logic.createMembership(dto);
+        return Response.ok().build();
+    }
+
     @GET
     @Path("getAllUsers")
     @Produces(MediaType.APPLICATION_JSON)
-    public AppUser[] getAllUsers(){
+    public UserOutDto[] getAllUsers(){
 
         var users = logic.getAllUsers();
 
         return users;
     }
 
+    @GET
+    @Path("getAllGroups")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Room[] getAllRooms(){
+        var rooms = logic.getAllRooms();
+
+        return rooms;
+    }
+
+    @GET
+    @Path("getAllMemberships/{username}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Room[] getAllMembershipRooms(@PathParam("username")String username){
+        var rooms = logic.getAllRoomMemberships(username);
+        return rooms;
+    }
+
+    @GET
+    @Path("getAllMessages")
+    @Produces(MediaType.APPLICATION_JSON)
+    public MessageDto[] getAllMsg(){
+        var res = logic.getAllMessages();
+        return res;
+    }
 
     //todo create call for getting all users
 
@@ -125,6 +182,8 @@ public class RequestResource {
 
         return TokenUtils.generateTokenString(claims, timeClaims);
     }
+
+
 
     //endregion
 

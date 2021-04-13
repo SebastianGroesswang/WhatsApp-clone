@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 public abstract class Message implements Serializable {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private long messageId;
     private LocalDateTime timestamp;
     private String value;

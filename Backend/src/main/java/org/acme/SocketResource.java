@@ -1,16 +1,25 @@
 package org.acme;
 
+import org.acme.coder.MessageDecoder;
+import org.acme.coder.MessageEncoder;
 import org.acme.controller.UserLogic;
+import org.acme.dto.MessageDto;
+import org.eclipse.microprofile.context.ManagedExecutor;
+import org.eclipse.microprofile.context.ThreadContext;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.websocket.*;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
+import javax.ws.rs.Consumes;
+import java.io.IOException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@ServerEndpoint("/chat/{username}")
+@ServerEndpoint(value = "/chat/{username}", decoders = MessageDecoder.class, encoders = MessageEncoder.class)
 @ApplicationScoped
 public class SocketResource {
 
@@ -22,10 +31,49 @@ public class SocketResource {
     @Inject
     UserLogic logic = new UserLogic();
 
+    ManagedExecutor executor = ManagedExecutor.builder().maxAsync(10).propagated(ThreadContext.CDI, ThreadContext.TRANSACTION).build();
+    ThreadContext threadContext = ThreadContext.builder().propagated(ThreadContext.CDI, ThreadContext.TRANSACTION).build();
+
     @OnOpen
     public void onOpen(Session session, @PathParam("username") String username) {
-        onlineSessions.put(username, session);
-        broadcast("User " + username + " joined");
+
+        executor.runAsync( () -> {
+            MessageDto fd = new MessageDto();
+            onlineSessions.put(username, session);
+
+            fd.setName(username);
+            fd.setMessage("HeelloThere");
+            fd.setTimestamp(Timestamp.valueOf(LocalDateTime.now()));
+            fd.setGroup(true);
+            fd.setUsername("usergfdsgfnafdsaafdsafme");
+
+            try {
+                session.getBasicRemote().sendObject(fd);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (EncodeException e) {
+                e.printStackTrace();
+            }
+        });
+
+        /*
+
+
+        //broadcast("User " + username + " joined");
+        System.out.println(username + "joined");
+
+        new Thread( () ->{
+            MessageDto fd = new MessageDto();
+
+            session.getAsyncRemote().sendObject(fd, result ->  {
+                if (result.getException() != null) {
+                    System.out.println("Unable to send message: " + result.getException());
+                }
+            });
+        }).start();
+
+*/
+
     }
 
     @OnClose
@@ -41,20 +89,54 @@ public class SocketResource {
     }
 
     @OnMessage
-    public void onMessage(String message, @PathParam("username") String username) {
+    public void onMessage(MessageDto message, @PathParam("username") String username) {
 
-        if(message.startsWith("--")){
-            command(username,message);
-        } else {
-            broadcast(">> " + username + ": " + message);
-            new Thread( () -> {
+
+        executor.runAsync( () -> {
+
+            logic.persistMessage(message);
+
+            /*
+            MessageDto fd = new MessageDto();
+
+            fd.setName(username);
+            fd.setMessage("HeelloThere");
+            fd.setTimestamp(Timestamp.valueOf(LocalDateTime.now()));
+            fd.setGroup(true);
+            fd.setUsername("usergfdsgfnafdsaafdsafme");
+
+
+            System.out.println("fdafdsafdsafdsafdsaa" + message.getName());
+
+               */
+            try {
+                onlineSessions.get(username).getBasicRemote().sendObject(message);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (EncodeException e) {
+                e.printStackTrace();
+            }
+
+        });
+
+
+
+
+        /*
+        broadcast(">> " + username + ": " + message);
+        new Thread( () -> {
                 //mr.create(new Message(                       username,                        message               ));
-            }).start();
-        }
+        }).start();
+
+
+        new Thread(() -> {
+            System.out.println(message.getMessage());
+        });
+        */
 
 
     }
-
+    //todo ^^change to messageDto
     private void broadcast(String message) {
         onlineSessions.values().forEach(s -> {
             s.getAsyncRemote().sendObject(message, result ->  {
@@ -64,68 +146,4 @@ public class SocketResource {
             });
         });
     }
-
-    private void command(String user, String command) {
-        var session = onlineSessions.get(user);
-
-        var result = "";
-
-        if(command.equals("--getOnlineUsers")){
-            var list = onlineSessions.keySet();
-
-            result += "These Users are online: \n";
-            for (var s:
-                    list) {
-                result += "\t-" + s + "\n";
-            }
-        } /*else if(command.startsWith("//getMessageID:")){
-
-            isOwnThread = true;
-
-            new Thread(() -> {
-                String resultText = "";
-                var arr = command.split(":");
-                long id;
-                try{
-                    id = Long.getLong(arr[1]);
-                } catch (Exception e){
-                    id = 0;
-                }
-
-                var mes = mr.find(id);
-
-                resultText = "Here is the wanted message: \n" + mes.getText();
-
-                session.getAsyncRemote().sendObject(resultText,  er ->  {
-                    if (er.getException() != null) {
-                        System.out.println("Unable to send message: " + er.getException());
-                    }
-                });
-            }).start();
-
-
-
-        }*/
-        else if(command.equals("--help")){
-            result += "These commands are supported: \n" +
-                    "\t--getOnlineUsers -> get all online users \n"+
-                    "\t--getMessageID:id -> get message with id -> not working, should be in rest service\n";
-
-        }
-        else {
-            result = "not supported command";
-
-        }
-
-
-        session.getAsyncRemote().sendObject(result,  er ->  {
-            if (er.getException() != null)
-            {
-                System.out.println("Unable to send message: " + er.getException());
-            }
-        });
-
-
-    }
-
 }

@@ -16,5 +16,13 @@ public class Membership implements Serializable {
     public Membership(MembershipID id) {
         this.id = id;
     }
+
+    public MembershipID getId() {
+        return id;
+    }
+
+    public void setId(MembershipID id) {
+        this.id = id;
+    }
 }
 
